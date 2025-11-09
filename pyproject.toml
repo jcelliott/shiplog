@@ -1,0 +1,26 @@
+[project]
+name = "pr-changelog"
+version = "0.1.0"
+description = "Aggregate PRs across multiple repositories and compile internal changelogs"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "PyGithub>=2.1.1",
+    "python-dateutil>=2.8.2",
+    "PyYAML>=6.0.1",
+    "rich>=13.7.0",
+    "anthropic>=0.39.0",
+]
+
+[project.scripts]
+changelog = "changelog.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["changelog"]
+
+[tool.uv]
+dev-dependencies = []

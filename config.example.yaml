@@ -1,0 +1,52 @@
+# GitHub Configuration
+github:
+  # Personal access token with repo scope
+  # Generate at: https://github.com/settings/tokens
+  token: "ghp_your_token_here"
+
+  # List of repositories to track (format: owner/repo)
+  repositories:
+    - "octocat/Hello-World"
+    - "octocat/Spoon-Knife"
+
+# Claude AI Configuration
+claude:
+  # Claude API key
+  # Get your key at: https://console.anthropic.com/settings/keys
+  api_key: "sk-ant-your_key_here"
+
+  # Model to use for categorization (optional)
+  # Default: claude-sonnet-4-5
+  # model: "claude-sonnet-4-5"
+
+# Filter Configuration
+filters:
+  # Date range for PRs (examples: "7d", "2024-01-01", "2024-01-01:2024-12-31")
+  # "7d" = last 7 days, "14d" = last 14 days
+  # Use specific dates for custom ranges
+  since: "7d"
+
+  # PR states to include: open, closed, merged, all
+  states:
+    - "merged"
+
+  # Optional: Filter by specific labels (empty list = all labels)
+  # labels:
+  #   - "feature"
+  #   - "bug"
+  #   - "enhancement"
+
+# Changelog Organization
+output:
+  # Categories for PRs - Claude will intelligently categorize each PR
+  # based on its title and description into one of these categories
+  categories:
+    - "Features"
+    - "Bug Fixes"
+    - "Dev Ex"
+
+  # Include PR author in changelog entries
+  show_author: true
+
+  # Include PR number/link
+  show_pr_number: true
