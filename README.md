@@ -48,7 +48,7 @@ claude:
   api_key: "sk-ant-your_key_here"  # Claude API key
 
 filters:
-  since: "7d"  # Last 7 days, or use "2024-01-01" for specific date
+  since: "7d"  # Last 7 days, or use "2025-01-01" for specific date
   states:
     - "merged"
 
@@ -79,19 +79,56 @@ The tool uses Claude to:
 
 ## Usage
 
+### Basic usage
+
 ```bash
 uv run changelog
 ```
 
 This reads `config.yaml` and outputs a formatted changelog to your terminal.
 
+### Save to file
+
+```bash
+uv run changelog -o changelog.md
+```
+
+### Custom config file
+
+```bash
+uv run changelog -c custom-config.yaml
+```
+
+### Override date filter
+
+```bash
+# Last 30 days
+uv run changelog --since 30d
+
+# Specific date range
+uv run changelog --since 2025-01-01
+
+# Date range
+uv run changelog --since 2025-01-01:2025-12-31
+```
+
+### Plain text output (no formatting)
+
+```bash
+uv run changelog --plain
+```
+
 ## Date Filtering
 
-The `since` field in the config supports multiple formats:
+The `since` field in the config (or `--since` flag) supports multiple formats:
 
 - **Relative days**: `"7d"`, `"14d"`, `"30d"`
-- **Specific date**: `"2024-01-01"`
-- **Date range**: `"2024-01-01:2024-12-31"` (uses start date)
+- **Specific date**: `"2025-01-01"` (uses local timezone)
+- **Specific timestamp**: `"2025-01-01T14:30:00"` (uses local timezone)
+- **Timestamp with timezone**: `"2025-01-01T14:30:00-05:00"` (explicit timezone offset)
+- **Date range**: `"2025-01-01:2025-12-31"` (uses start date)
+
+Note: Dates and timestamps without explicit timezone info are interpreted as your local timezone.
 
 ## Example Output
 

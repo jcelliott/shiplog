@@ -65,56 +65,92 @@ class GitHubClient:
         return all_prs
 
     def _fetch_repo_prs(self, repo, repo_name: str) -> List[PullRequest]:
-        """Fetch PRs from a single repository."""
+        """Fetch PRs from a single repository using GitHub Search API."""
         prs = []
         since_date = self.config.filters.get_since_date()
 
-        # Determine which states to query
+        # Build search queries for different states
         states_to_query = set(self.config.filters.states)
-        if "all" in states_to_query:
-            query_states = ["open", "closed"]
-        elif "merged" in states_to_query:
-            # Need to query closed PRs and filter for merged
-            query_states = ["closed"]
-            if "open" in states_to_query:
-                query_states.append("open")
-            if "closed" in states_to_query:
-                # Already included
-                pass
-        else:
-            query_states = list(states_to_query)
+        queries = self._build_search_queries(repo_name, since_date, states_to_query)
 
-        for state in query_states:
-            gh_prs = repo.get_pulls(
-                state=state,
-                sort="updated",
-                direction="desc"
-            )
+        # Execute each search query
+        for query in queries:
+            try:
+                results = self.client.search_issues(query=query)
 
-            for gh_pr in gh_prs:
-                # Check date filter
-                if since_date:
-                    pr_date = gh_pr.merged_at if gh_pr.merged else gh_pr.created_at
-                    if pr_date and pr_date < since_date:
-                        # Since we're sorted by update time, we can break early
-                        break
-
-                pr = PullRequest.from_github_pr(gh_pr, repo_name)
-
-                # Filter by state (handle merged separately)
-                if "merged" in states_to_query and pr.state == "merged":
-                    pass  # Include merged PRs
-                elif pr.state not in states_to_query and "all" not in states_to_query:
-                    continue
-
-                # Filter by labels if specified
-                if self.config.filters.labels:
-                    if not any(label in pr.labels for label in self.config.filters.labels):
+                for issue in results:
+                    # Convert Issue object to PullRequest
+                    # Note: GitHub's search returns Issue objects, but PRs are issues
+                    if not issue.pull_request:
                         continue
 
-                prs.append(pr)
+                    # Fetch the full PR object to get all details
+                    gh_pr = repo.get_pull(issue.number)
+                    pr = PullRequest.from_github_pr(gh_pr, repo_name)
 
-        return prs
+                    # Filter by labels if specified (not in search query)
+                    if self.config.filters.labels:
+                        if not any(label in pr.labels for label in self.config.filters.labels):
+                            continue
+
+                    prs.append(pr)
+            except Exception as e:
+                print(f"Warning: Search query failed for {repo_name}: {e}")
+                continue
+
+        # Remove duplicates (in case a PR matches multiple queries)
+        seen = set()
+        unique_prs = []
+        for pr in prs:
+            if pr.number not in seen:
+                seen.add(pr.number)
+                unique_prs.append(pr)
+
+        return unique_prs
+
+    def _build_search_queries(self, repo_name: str, since_date: Optional[datetime], states: set) -> List[str]:
+        """Build GitHub search queries based on filters."""
+        queries = []
+
+        # Format date for search query (ISO 8601 format with timezone)
+        # GitHub requires timezone info, so we use isoformat() which includes it
+        date_str = since_date.isoformat() if since_date else None
+
+        # Base query parts
+        base = f"repo:{repo_name} is:pr"
+
+        # Handle different state combinations
+        if "all" in states:
+            # Search for all PRs (open and closed)
+            if date_str:
+                # Use created date for all PRs
+                queries.append(f"{base} created:>={date_str}")
+            else:
+                queries.append(base)
+        else:
+            # Handle each state separately
+            if "merged" in states:
+                # Merged PRs - use merged date
+                if date_str:
+                    queries.append(f"{base} is:merged merged:>={date_str}")
+                else:
+                    queries.append(f"{base} is:merged")
+
+            if "open" in states:
+                # Open PRs - use created date
+                if date_str:
+                    queries.append(f"{base} is:open created:>={date_str}")
+                else:
+                    queries.append(f"{base} is:open")
+
+            if "closed" in states and "merged" not in states:
+                # Closed but not merged PRs - use closed date
+                if date_str:
+                    queries.append(f"{base} is:closed is:unmerged closed:>={date_str}")
+                else:
+                    queries.append(f"{base} is:closed is:unmerged")
+
+        return queries
 
     def close(self):
         """Close the GitHub client."""

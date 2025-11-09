@@ -21,9 +21,10 @@ claude:
 
 # Filter Configuration
 filters:
-  # Date range for PRs (examples: "7d", "2024-01-01", "2024-01-01:2024-12-31")
-  # "7d" = last 7 days, "14d" = last 14 days
-  # Use specific dates for custom ranges
+  # Date range for PRs
+  # Examples: "7d", "2025-01-01", "2025-01-01T14:30:00", "2025-01-01:2025-12-31"
+  # Relative: "7d" = last 7 days, "14d" = last 14 days
+  # Timestamps without timezone use your local timezone
   since: "7d"
 
   # PR states to include: open, closed, merged, all

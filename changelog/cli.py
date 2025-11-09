@@ -7,10 +7,10 @@ from pathlib import Path
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .config import Config
-from .github_client import GitHubClient
-from .formatter import ChangelogFormatter
 from .categorizer import PRCategorizer
+from .config import Config
+from .formatter import ChangelogFormatter
+from .github_client import GitHubClient
 
 
 def main():
@@ -19,20 +19,24 @@ def main():
         description="Generate changelogs from GitHub pull requests across multiple repositories"
     )
     parser.add_argument(
-        "-c", "--config",
+        "-c",
+        "--config",
         type=Path,
         default=Path("config.yaml"),
-        help="Path to configuration file (default: config.yaml)"
+        help="Path to configuration file (default: config.yaml)",
     )
     parser.add_argument(
-        "-o", "--output",
-        type=Path,
-        help="Write changelog to file instead of stdout"
+        "-o", "--output", type=Path, help="Write changelog to file instead of stdout"
     )
     parser.add_argument(
         "--plain",
         action="store_true",
-        help="Output plain text instead of rich formatted markdown"
+        help="Output plain text instead of rich formatted markdown",
+    )
+    parser.add_argument(
+        "--since",
+        type=str,
+        help='Override date filter (e.g., "7d", "2025-01-01", "2025-01-01T14:30:00")',
     )
 
     args = parser.parse_args()
@@ -40,12 +44,19 @@ def main():
     # Check if config file exists
     if not args.config.exists():
         print(f"Error: Configuration file not found: {args.config}", file=sys.stderr)
-        print(f"\nCreate a config.yaml file (see config.example.yaml for reference)", file=sys.stderr)
+        print(
+            f"\nCreate a config.yaml file (see config.example.yaml for reference)",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     try:
         # Load configuration
         config = Config.from_file(args.config)
+
+        # Override date filter if provided via CLI
+        if args.since:
+            config.filters.since = args.since
 
         # Fetch PRs from GitHub
         console = Console()
@@ -55,11 +66,15 @@ def main():
             client.close()
 
         if not prs:
-            console.print("[yellow]No pull requests found matching the criteria.[/yellow]")
+            console.print(
+                "[yellow]No pull requests found matching the criteria.[/yellow]"
+            )
             return
 
         # Categorize PRs using Claude
-        with console.status(f"[bold blue]Categorizing {len(prs)} PRs using Claude AI..."):
+        with console.status(
+            f"[bold blue]Categorizing {len(prs)} PRs using Claude AI..."
+        ):
             categorizer = PRCategorizer(config)
             categorization = categorizer.categorize_batch(prs)
             categorizer.close()
