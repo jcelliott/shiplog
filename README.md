@@ -6,6 +6,7 @@ A Python tool to aggregate pull requests across multiple GitHub repositories and
 
 - 📦 **Multi-repository support** - Track PRs across multiple repos
 - 🤖 **AI-powered categorization** - Uses Claude to intelligently categorize PRs by title and description
+- ✨ **AI-generated summaries** - Generates concise, clear summaries for each PR
 - 🎯 **Flexible filtering** - Filter by date, state, and labels
 - 🎨 **Rich terminal output** - Beautiful markdown formatting in your terminal
 - 📄 **Export to file** - Save changelogs to markdown files
@@ -72,11 +73,11 @@ Required scopes:
 
 Get your API key at: https://console.anthropic.com/settings/keys
 
-The tool uses Claude to intelligently categorize PRs based on their titles and descriptions into your configured categories.
+The tool uses Claude to:
+- Intelligently categorize PRs based on their titles and descriptions
+- Generate concise, clear summaries for each PR
 
 ## Usage
-
-### Basic usage
 
 ```bash
 uv run changelog
@@ -84,25 +85,7 @@ uv run changelog
 
 This reads `config.yaml` and outputs a formatted changelog to your terminal.
 
-### Save to file
-
-```bash
-uv run changelog -o changelog.md
-```
-
-### Custom config file
-
-```bash
-uv run changelog -c custom-config.yaml
-```
-
-### Plain text output (no formatting)
-
-```bash
-uv run changelog --plain
-```
-
-## Date Filtering
+##i# Date Filtering
 
 The `since` field in the config supports multiple formats:
 

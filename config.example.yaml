@@ -40,6 +40,7 @@ filters:
 output:
   # Categories for PRs - Claude will intelligently categorize each PR
   # based on its title and description into one of these categories
+  # and generate a concise summary for each
   categories:
     - "Features"
     - "Bug Fixes"
