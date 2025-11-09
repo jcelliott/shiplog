@@ -57,7 +57,21 @@ Available categories: {categories_str}
 
 For each PR below:
 1. Determine which category it belongs to based on its title and description
-2. Write a concise, clear summary (1-2 sentences) of what the PR does
+2. Write a concise summary (1 sentence) describing WHAT was done, not WHY or the benefits
+
+Summary guidelines:
+- Focus on WHAT changed, not the rationale or benefits
+- Be concise - avoid explanatory clauses about performance, benefits, or reasons
+- Keep it factual and direct
+- Use past tense (e.g., "Added", "Fixed", "Refactored")
+
+Good examples:
+- "Improved text file diffing to use version store interface with asynchronous operations"
+- "Refactored layout components into unified src/layout directory structure with consistent header and container patterns"
+
+Bad examples (too verbose):
+- "Improved text file diffing to use version store interface with asynchronous operations, enhancing performance and responsiveness for large operations"
+- "Refactored layout components into unified src/layout directory structure, establishing consistent header and container patterns with max 1920px width"
 
 Category guidelines:
 - "Features" - New functionality, enhancements, new capabilities

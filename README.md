@@ -85,7 +85,7 @@ uv run changelog
 
 This reads `config.yaml` and outputs a formatted changelog to your terminal.
 
-##i# Date Filtering
+## Date Filtering
 
 The `since` field in the config supports multiple formats:
 
@@ -100,17 +100,17 @@ The `since` field in the config supports multiple formats:
 
 **15 pull requests across 3 repositories**
 
-## Features
+**Features**
 
 - **Add dark mode support** (`company/frontend`) [#123](https://github.com/company/frontend/pull/123) by @alice
 - **Implement user search** (`company/api`) [#456](https://github.com/company/api/pull/456) by @bob
 
-## Bug Fixes
+**Bug Fixes**
 
 - **Fix login redirect loop** (`company/frontend`) [#124](https://github.com/company/frontend/pull/124) by @charlie
 - **Handle null values in API response** (`company/api`) [#457](https://github.com/company/api/pull/457) by @alice
 
-## Dev Ex
+**Dev Ex**
 
 - **Improve CI pipeline speed** (`company/infrastructure`) [#789](https://github.com/company/infrastructure/pull/789) by @dave
 ```

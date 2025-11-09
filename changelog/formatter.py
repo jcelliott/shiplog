@@ -47,7 +47,7 @@ class ChangelogFormatter:
             if category not in categorized or not categorized[category]:
                 continue
 
-            lines.append(f"## {category}")
+            lines.append(f"**{category}**")
             lines.append("")
 
             # Sort PRs by repo, then by PR number
