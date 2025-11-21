@@ -1,4 +1,4 @@
-# PR Changelog
+# Shiplog 🚢
 
 A Python tool to aggregate pull requests across multiple GitHub repositories and compile internal changelogs for your team.
 
@@ -82,7 +82,7 @@ The tool uses Claude to:
 ### Basic usage
 
 ```bash
-uv run changelog
+uv run shiplog
 ```
 
 This reads `config.yaml` and outputs a formatted changelog to your terminal.
@@ -90,32 +90,32 @@ This reads `config.yaml` and outputs a formatted changelog to your terminal.
 ### Save to file
 
 ```bash
-uv run changelog -o changelog.md
+uv run shiplog -o shiplog.md
 ```
 
 ### Custom config file
 
 ```bash
-uv run changelog -c custom-config.yaml
+uv run shiplog -c custom-config.yaml
 ```
 
 ### Override date filter
 
 ```bash
 # Last 30 days
-uv run changelog --since 30d
+uv run shiplog --since 30d
 
 # Specific date range
-uv run changelog --since 2025-01-01
+uv run shiplog --since 2025-01-01
 
 # Date range
-uv run changelog --since 2025-01-01:2025-12-31
+uv run shiplog --since 2025-01-01:2025-12-31
 ```
 
 ### Plain text output (no formatting)
 
 ```bash
-uv run changelog --plain
+uv run shiplog --plain
 ```
 
 ## Date Filtering
@@ -133,7 +133,7 @@ Note: Dates and timestamps without explicit timezone info are interpreted as you
 ## Example Output
 
 ```markdown
-# Changelog
+# Shiplog
 
 **15 pull requests across 3 repositories**
 
@@ -157,8 +157,8 @@ Note: Dates and timestamps without explicit timezone info are interpreted as you
 ### Project Structure
 
 ```
-changelog/
-├── changelog/
+shiplog/
+├── shiplog/
 │   ├── __init__.py
 │   ├── cli.py           # CLI entry point
 │   ├── config.py        # Configuration handling
@@ -180,10 +180,8 @@ uv run pytest
 ## Future Enhancements
 
 - [ ] Slack integration for posting changelogs
-- [ ] Support for custom Jinja2 templates
 - [ ] Filter by PR author
 - [ ] Group by repository instead of category
-- [ ] Interactive mode for config generation
 
 ## License
 
