@@ -82,6 +82,7 @@ class OutputConfig:
     categories: List[str]
     show_author: bool = True
     show_pr_number: bool = True
+    slack_users: Optional[Dict[str, str]] = None
 
 
 @dataclass

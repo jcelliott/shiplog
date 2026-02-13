@@ -5,10 +5,9 @@ A Python tool to aggregate pull requests across multiple GitHub repositories and
 ## Features
 
 - 📦 **Multi-repository support** - Track PRs across multiple repos
-- 🤖 **AI-powered categorization** - Uses Claude to intelligently categorize PRs by title and description
-- ✨ **AI-generated summaries** - Generates concise, clear summaries for each PR
+- 🤖 **AI-powered categorization** - Intelligently categorize PRs by title and description
+- ✨ **AI-generated summaries** - Generate concise, clear summaries for each PR
 - 🎯 **Flexible filtering** - Filter by date, state, and labels
-- 🎨 **Rich terminal output** - Beautiful markdown formatting in your terminal
 - 📄 **Export to file** - Save changelogs to markdown files
 
 ## Installation

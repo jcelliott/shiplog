@@ -67,11 +67,11 @@ Summary guidelines:
 
 Good examples:
 - "Improved text file diffing to use version store interface with asynchronous operations"
-- "Refactored layout components into unified src/layout directory structure with consistent header and container patterns"
+- "Refactored layout components into unified src/layout directory structure"
 
 Bad examples (too verbose):
-- "Improved text file diffing to use version store interface with asynchronous operations, enhancing performance and responsiveness for large operations"
-- "Refactored layout components into unified src/layout directory structure, establishing consistent header and container patterns with max 1920px width"
+- BAD: "Improved text file diffing to use version store interface with asynchronous operations, enhancing performance and responsiveness for large operations"
+- BAD: "Refactored layout components into unified src/layout directory structure, establishing consistent header and container patterns with max 1920px width"
 
 Category guidelines:
 - "Features" - New functionality, enhancements, new capabilities

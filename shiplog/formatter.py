@@ -98,6 +98,8 @@ class ChangelogFormatter:
 
         # Author
         if self.config.output.show_author:
-            parts.append(f"by @{pr.author}")
+            slack_users = self.config.output.slack_users
+            display_name = slack_users.get(pr.author, pr.author) if slack_users else pr.author
+            parts.append(f"by @{display_name}")
 
         return " ".join(parts)

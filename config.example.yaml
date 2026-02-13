@@ -52,3 +52,9 @@ output:
 
   # Include PR number/link
   show_pr_number: true
+
+  # Optional: Map GitHub usernames to Slack usernames
+  # Useful when posting changelogs to Slack
+  # slack_users:
+  #   octocat: octocat-slack
+  #   alice: alice.smith
