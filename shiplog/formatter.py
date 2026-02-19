@@ -28,9 +28,6 @@ class ChangelogFormatter:
         if not prs:
             return "No pull requests found matching the criteria."
 
-        # Group PRs by category
-        categorized = self._group_by_category(prs, categorization)
-
         # Build the changelog
         lines = []
         lines.append("# Changelog")
@@ -42,23 +39,32 @@ class ChangelogFormatter:
         lines.append(f"**{total_prs} pull request{'s' if total_prs != 1 else ''} across {repo_count} repositor{'ies' if repo_count != 1 else 'y'}**")
         lines.append("")
 
-        # Add each category in the order defined in config
-        for category in self.config.output.categories:
-            if category not in categorized or not categorized[category]:
-                continue
-
-            lines.append(f"**{category}**")
+        if self.config.output.skip_categorization:
+            # Flat list without category headers
+            sorted_prs = sorted(prs, key=lambda pr: (pr.repo, -pr.number))
+            for pr in sorted_prs:
+                lines.append(self._format_pr(pr, categorization))
             lines.append("")
+        else:
+            # Group PRs by category
+            categorized = self._group_by_category(prs, categorization)
 
-            # Sort PRs by repo, then by PR number
-            category_prs = categorized[category]
-            category_prs.sort(key=lambda pr: (pr.repo, -pr.number))
+            # Add each category in the order defined in config
+            for category in self.config.output.categories:
+                if category not in categorized or not categorized[category]:
+                    continue
 
-            for pr in category_prs:
-                line = self._format_pr(pr, categorization)
-                lines.append(line)
+                lines.append(f"**{category}**")
+                lines.append("")
 
-            lines.append("")
+                # Sort PRs by repo, then by PR number
+                category_prs = categorized[category]
+                category_prs.sort(key=lambda pr: (pr.repo, -pr.number))
+
+                for pr in category_prs:
+                    lines.append(self._format_pr(pr, categorization))
+
+                lines.append("")
 
         return "\n".join(lines)
 

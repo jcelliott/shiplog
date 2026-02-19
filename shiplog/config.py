@@ -83,6 +83,15 @@ class OutputConfig:
     show_author: bool = True
     show_pr_number: bool = True
     slack_users: Optional[Dict[str, str]] = None
+    skip_categorization: bool = False
+    skip_summaries: bool = False
+
+
+def _merge_section(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """Shallow per-field merge: override keys replace base keys."""
+    merged = dict(base)
+    merged.update(override)
+    return merged
 
 
 @dataclass
@@ -94,11 +103,38 @@ class Config:
     output: OutputConfig
     claude: ClaudeConfig
 
+    @property
+    def needs_claude(self) -> bool:
+        """Whether the Claude API is needed for this config."""
+        return not (self.output.skip_categorization and self.output.skip_summaries)
+
+    @staticmethod
+    def _apply_profile(data: Dict[str, Any], profile_name: str) -> Dict[str, Any]:
+        """Apply a named profile's overrides to the base config data."""
+        profiles = data.get("profiles", {})
+        if profile_name not in profiles:
+            available = ", ".join(profiles.keys()) if profiles else "none"
+            raise ValueError(
+                f"Profile '{profile_name}' not found. Available profiles: {available}"
+            )
+
+        profile = profiles[profile_name]
+        merged = {}
+        for section in ("github", "filters", "output", "claude"):
+            base_section = data.get(section, {})
+            profile_section = profile.get(section, {})
+            merged[section] = _merge_section(base_section, profile_section)
+
+        return merged
+
     @classmethod
-    def from_file(cls, path: Path) -> "Config":
+    def from_file(cls, path: Path, profile: Optional[str] = None) -> "Config":
         """Load configuration from a YAML file."""
         with open(path, "r") as f:
             data = yaml.safe_load(f)
+
+        if profile:
+            data = cls._apply_profile(data, profile)
 
         return cls(
             github=GitHubConfig(**data["github"]),
@@ -108,8 +144,11 @@ class Config:
         )
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Config":
+    def from_dict(cls, data: Dict[str, Any], profile: Optional[str] = None) -> "Config":
         """Create config from dictionary."""
+        if profile:
+            data = cls._apply_profile(data, profile)
+
         return cls(
             github=GitHubConfig(**data["github"]),
             filters=FilterConfig(**data["filters"]),

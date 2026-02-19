@@ -48,14 +48,17 @@ class PRCategorizer:
         return categorization
 
     def _build_prompt(self, prs: List[PullRequest]) -> str:
-        """Build the categorization prompt."""
-        categories_str = ", ".join(f'"{cat}"' for cat in self.categories)
+        """Build the prompt, adapting based on skip flags."""
+        skip_cat = self.config.output.skip_categorization
+        skip_sum = self.config.output.skip_summaries
 
-        prompt = f"""You are helping categorize pull requests for an internal team changelog.
+        prompt = "You are helping process pull requests for an internal team changelog.\n\n"
 
-Available categories: {categories_str}
-
-For each PR below:
+        if not skip_cat and not skip_sum:
+            # Full mode: categorize + summarize
+            categories_str = ", ".join(f'"{cat}"' for cat in self.categories)
+            prompt += f"Available categories: {categories_str}\n\n"
+            prompt += """For each PR below:
 1. Determine which category it belongs to based on its title and description
 2. Write a concise summary (1 sentence) describing WHAT was done, not WHY or the benefits
 
@@ -73,26 +76,50 @@ Bad examples (too verbose):
 - BAD: "Improved text file diffing to use version store interface with asynchronous operations, enhancing performance and responsiveness for large operations"
 - BAD: "Refactored layout components into unified src/layout directory structure, establishing consistent header and container patterns with max 1920px width"
 
-Category guidelines:
-- "Features" - New functionality, enhancements, new capabilities
-- "Bug Fixes" - Fixes for bugs, errors, or incorrect behavior
-- "Dev Ex" - Developer experience improvements, tooling, CI/CD, documentation, refactoring
-
 Respond with ONLY a JSON object. Format:
 {{
   "123": {{
     "category": "Features",
     "summary": "Added dark mode support with automatic theme switching"
-  }},
-  "456": {{
-    "category": "Bug Fixes",
-    "summary": "Fixed login redirect loop on session timeout"
   }}
 }}
-
-Pull Requests to categorize:
-
 """
+        elif skip_cat and not skip_sum:
+            # Summary-only mode
+            prompt += """For each PR below, write a concise summary (1 sentence) describing WHAT was done, not WHY or the benefits.
+
+Summary guidelines:
+- Focus on WHAT changed, not the rationale or benefits
+- Be concise - avoid explanatory clauses about performance, benefits, or reasons
+- Keep it factual and direct
+- Use past tense (e.g., "Added", "Fixed", "Refactored")
+
+Good examples:
+- "Improved text file diffing to use version store interface with asynchronous operations"
+- "Refactored layout components into unified src/layout directory structure"
+
+Respond with ONLY a JSON object. Format:
+{{
+  "123": {{
+    "summary": "Added dark mode support with automatic theme switching"
+  }}
+}}
+"""
+        elif not skip_cat and skip_sum:
+            # Category-only mode
+            categories_str = ", ".join(f'"{cat}"' for cat in self.categories)
+            prompt += f"Available categories: {categories_str}\n\n"
+            prompt += """For each PR below, determine which category it belongs to based on its title and description.
+
+Respond with ONLY a JSON object. Format:
+{{
+  "123": {{
+    "category": "Features"
+  }}
+}}
+"""
+
+        prompt += "\nPull Requests to process:\n\n"
 
         for pr in prs:
             prompt += f"\nPR #{pr.number} ({pr.repo})\n"
@@ -111,6 +138,10 @@ Pull Requests to categorize:
     def _parse_response(self, response_text: str, prs: List[PullRequest]) -> Dict[str, PRClassification]:
         """Parse Claude's response into a categorization mapping."""
         import json
+
+        skip_cat = self.config.output.skip_categorization
+        skip_sum = self.config.output.skip_summaries
+        default_cat = "" if skip_cat else self.categories[0]
 
         try:
             # Extract JSON from response
@@ -131,31 +162,33 @@ Pull Requests to categorize:
                 pr_key = str(pr.number)
 
                 if pr_key in categorization:
-                    # Expect {"category": "...", "summary": "..."}
                     if isinstance(categorization[pr_key], dict):
-                        category = categorization[pr_key].get("category", self.categories[0])
-                        summary = categorization[pr_key].get("summary", pr.title)
-                    else:
-                        # Fallback if format is wrong
-                        category = self.categories[0]
-                        summary = pr.title
+                        entry = categorization[pr_key]
+                        if skip_cat:
+                            category = ""
+                        else:
+                            category = entry.get("category", self.categories[0])
+                            if category not in self.categories:
+                                category = self.categories[0]
 
-                    # Validate category
-                    if category not in self.categories:
-                        category = self.categories[0]
+                        summary = pr.title if skip_sum else entry.get("summary", pr.title)
+                    else:
+                        category = default_cat
+                        summary = pr.title
 
                     result[pr_key] = PRClassification(category=category, summary=summary)
                 else:
-                    # Default to first category if not found
-                    result[pr_key] = PRClassification(category=self.categories[0], summary=pr.title)
+                    result[pr_key] = PRClassification(category=default_cat, summary=pr.title)
 
             return result
 
         except json.JSONDecodeError as e:
             print(f"Warning: Failed to parse Claude response: {e}")
             print(f"Response was: {response_text}")
-            # Fallback: assign all to first category with original title
-            return {str(pr.number): PRClassification(category=self.categories[0], summary=pr.title) for pr in prs}
+            return {
+                str(pr.number): PRClassification(category=default_cat, summary=pr.title)
+                for pr in prs
+            }
 
     def close(self):
         """Close the client."""

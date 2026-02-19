@@ -53,8 +53,46 @@ output:
   # Include PR number/link
   show_pr_number: true
 
+  # Skip AI categorization - output PRs as a flat list without category headers
+  # skip_categorization: false
+
+  # Skip AI summaries - use original PR titles instead of AI-generated summaries
+  # skip_summaries: false
+
   # Optional: Map GitHub usernames to Slack usernames
   # Useful when posting changelogs to Slack
   # slack_users:
   #   octocat: octocat-slack
   #   alice: alice.smith
+
+# Profiles - Named configurations that override top-level defaults
+# Use with: uv run shiplog --profile <name>
+# Each profile can override any field in github, filters, output, or claude sections.
+# Fields not specified in a profile inherit from the top-level config.
+#
+# profiles:
+#   internal:
+#     github:
+#       repositories:
+#         - "company/repo1"
+#         - "company/repo2"
+#         - "company/repo3"
+#     output:
+#       slack_users:
+#         alice: alice.smith
+#         bob: bob.jones
+#
+#   public:
+#     github:
+#       repositories:
+#         - "company/main-repo"
+#     output:
+#       skip_categorization: true
+#     filters:
+#       since: "30d"
+#
+#   quick:
+#     # Skip all AI processing for fast output with original PR titles
+#     output:
+#       skip_categorization: true
+#       skip_summaries: true

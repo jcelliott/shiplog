@@ -38,6 +38,12 @@ def main():
         type=str,
         help='Override date filter (e.g., "7d", "2025-01-01", "2025-01-01T14:30:00")',
     )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        default="default",
+        help='Named profile from config to use (default: "default")',
+    )
 
     args = parser.parse_args()
 
@@ -52,7 +58,18 @@ def main():
 
     try:
         # Load configuration
-        config = Config.from_file(args.config)
+        try:
+            config = Config.from_file(args.config, profile=args.profile)
+        except ValueError as e:
+            if args.profile == "default":
+                console = Console()
+                console.print(
+                    '[yellow]No "default" profile found in config. '
+                    "Define a profiles section in your config file, "
+                    "or specify a profile with --profile <name>.[/yellow]"
+                )
+                return
+            raise
 
         # Override date filter if provided via CLI
         if args.since:
@@ -71,13 +88,23 @@ def main():
             )
             return
 
-        # Categorize PRs using Claude
-        with console.status(
-            f"[bold blue]Categorizing {len(prs)} PRs using Claude AI..."
-        ):
-            categorizer = PRCategorizer(config)
-            categorization = categorizer.categorize_batch(prs)
-            categorizer.close()
+        # Categorize PRs using Claude (unless both skips are enabled)
+        if config.needs_claude:
+            if config.output.skip_categorization:
+                status_msg = f"[bold blue]Summarizing {len(prs)} PRs using Claude AI..."
+            else:
+                status_msg = f"[bold blue]Categorizing {len(prs)} PRs using Claude AI..."
+            with console.status(status_msg):
+                categorizer = PRCategorizer(config)
+                categorization = categorizer.categorize_batch(prs)
+                categorizer.close()
+        else:
+            from .categorizer import PRClassification
+
+            categorization = {
+                str(pr.number): PRClassification(category="", summary=pr.title)
+                for pr in prs
+            }
 
         # Format changelog
         formatter = ChangelogFormatter(config)
