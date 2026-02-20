@@ -1,7 +1,7 @@
 """GitHub API client for fetching pull requests."""
 
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 
 from github import Github, PullRequest as GHPullRequest
@@ -64,10 +64,31 @@ class GitHubClient:
 
         return all_prs
 
+    def _resolve_ref_date(self, repo, ref: str) -> Optional[datetime]:
+        """Resolve a git ref (tag or SHA) to its commit date.
+
+        Returns a timezone-aware datetime or None if the ref is not found.
+        """
+        try:
+            commit = repo.get_commit(ref)
+            dt = commit.commit.committer.date
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except Exception:
+            return None
+
     def _fetch_repo_prs(self, repo, repo_name: str) -> List[PullRequest]:
         """Fetch PRs from a single repository using GitHub Search API."""
         prs = []
-        since_date = self.config.filters.get_since_date()
+        try:
+            since_date = self.config.filters.get_since_date()
+        except (ValueError, OverflowError):
+            # Not a date expression — try resolving as a git ref (tag or SHA)
+            since_date = self._resolve_ref_date(repo, self.config.filters.since)
+            if since_date is None:
+                print(f"Warning: Could not resolve '{self.config.filters.since}' as a date or git ref in {repo_name}, skipping")
+                return []
 
         # Build search queries for different states
         states_to_query = set(self.config.filters.states)

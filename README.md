@@ -109,6 +109,12 @@ uv run shiplog --since 2025-01-01
 
 # Date range
 uv run shiplog --since 2025-01-01:2025-12-31
+
+# Since a release tag
+uv run shiplog --since v1.2.0
+
+# Since a commit SHA
+uv run shiplog --since abc1234
 ```
 
 ### Plain text output (no formatting)
@@ -126,8 +132,12 @@ The `since` field in the config (or `--since` flag) supports multiple formats:
 - **Specific timestamp**: `"2025-01-01T14:30:00"` (uses local timezone)
 - **Timestamp with timezone**: `"2025-01-01T14:30:00-05:00"` (explicit timezone offset)
 - **Date range**: `"2025-01-01:2025-12-31"` (uses start date)
+- **Git tag**: `"v1.2.0"` (resolved per-repo via GitHub API)
+- **Commit SHA**: `"abc1234"` or full SHA (resolved per-repo via GitHub API)
 
 Note: Dates and timestamps without explicit timezone info are interpreted as your local timezone.
+
+Note: When using a tag or commit SHA, the ref is resolved independently in each repository. Repos where the ref doesn't exist are skipped with a warning.
 
 ## Example Output
 

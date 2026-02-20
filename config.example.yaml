@@ -25,6 +25,7 @@ filters:
   # Examples: "7d", "2025-01-01", "2025-01-01T14:30:00", "2025-01-01:2025-12-31"
   # Relative: "7d" = last 7 days, "14d" = last 14 days
   # Timestamps without timezone use your local timezone
+  # Git ref: "v1.2.0" (tag) or "abc1234" (commit SHA) - resolved per-repo
   since: "7d"
 
   # PR states to include: open, closed, merged, all

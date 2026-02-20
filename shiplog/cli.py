@@ -36,7 +36,7 @@ def main():
     parser.add_argument(
         "--since",
         type=str,
-        help='Override date filter (e.g., "7d", "2025-01-01", "2025-01-01T14:30:00")',
+        help='Override date filter (e.g., "7d", "2025-01-01", "v1.2.0", or a commit SHA)',
     )
     parser.add_argument(
         "--profile",
