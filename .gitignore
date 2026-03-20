@@ -1,6 +1,9 @@
 # Config with secrets
 config.yaml
 
+# Runtime state
+.last-run.yaml
+
 # Python
 __pycache__/
 *.py[cod]

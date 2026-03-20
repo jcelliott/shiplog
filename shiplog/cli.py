@@ -2,8 +2,10 @@
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
+import yaml
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -33,10 +35,16 @@ def main():
         action="store_true",
         help="Output plain text instead of rich formatted markdown",
     )
-    parser.add_argument(
+    since_group = parser.add_mutually_exclusive_group()
+    since_group.add_argument(
         "--since",
         type=str,
         help='Override date filter (e.g., "7d", "2025-01-01", "v1.2.0", or a commit SHA)',
+    )
+    since_group.add_argument(
+        "--since-last",
+        action="store_true",
+        help="Use timestamp from previous run (.last-run file)",
     )
     parser.add_argument(
         "--profile",
@@ -74,9 +82,23 @@ def main():
         # Override date filter if provided via CLI
         if args.since:
             config.filters.since = args.since
+        elif args.since_last:
+            last_run_file = Path(".last-run.yaml")
+            if not last_run_file.exists():
+                Console(stderr=True).print(
+                    "[red]Error:[/red] No .last-run.yaml file found. Run shiplog once first."
+                )
+                sys.exit(1)
+            last_runs = yaml.safe_load(last_run_file.read_text()) or {}
+            if args.profile not in last_runs:
+                Console(stderr=True).print(
+                    f"[red]Error:[/red] No last run recorded for profile '{args.profile}'."
+                )
+                sys.exit(1)
+            config.filters.since = last_runs[args.profile]["last_run"]
 
         # Fetch PRs from GitHub
-        console = Console()
+        console = Console(stderr=True)
         with console.status("[bold green]Fetching pull requests from GitHub..."):
             client = GitHubClient(config)
             prs = client.fetch_pull_requests()
@@ -114,11 +136,21 @@ def main():
         if args.output:
             args.output.write_text(changelog)
             console.print(f"[green]✓[/green] Changelog written to {args.output}")
-        elif args.plain:
+        elif args.plain or not sys.stdout.isatty():
             print(changelog)
         else:
             # Rich formatted output
-            console.print(Markdown(changelog))
+            Console().print(Markdown(changelog))
+
+        # Save and print timestamp for use with --since-last on next run
+        last_run_file = Path(".last-run.yaml")
+        last_runs = {}
+        if last_run_file.exists():
+            last_runs = yaml.safe_load(last_run_file.read_text()) or {}
+        now = datetime.now().astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_runs[args.profile] = {"last_run": now}
+        last_run_file.write_text(yaml.dump(last_runs, default_flow_style=False))
+        Console(stderr=True).print(f"\n[dim]Timestamp for next run: --since-last[/dim]")
 
     except FileNotFoundError as e:
         error_console = Console(stderr=True)

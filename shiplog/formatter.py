@@ -93,7 +93,7 @@ class ChangelogFormatter:
         summary = classification.summary if classification else pr.title
 
         # PR summary/title
-        parts.append(f"- **{summary}**")
+        parts.append(f"- {summary}")
 
         # Repository name
         parts.append(f"(`{pr.repo}`)")
